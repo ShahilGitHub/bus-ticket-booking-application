@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import wheel from "../assets/wheel.png";
 
 export default function Reservation(){
@@ -15,20 +15,42 @@ const [email,setEmail] = useState("")
 const [age,setAge] = useState("")
 const [gender,setGender] = useState("")
 
-const bookedSeats =
-JSON.parse(localStorage.getItem("tickets")) || []
+const [bookedSeats,setBookedSeats] = useState([])
 
-const bookSeat = () => {
+const API_URL = "https://bus-booking-backend-yni2.onrender.com/api/tickets"
 
-let tickets =
-JSON.parse(localStorage.getItem("tickets")) || []
 
-const seatTaken = tickets.some(
-ticket => ticket.seat === selectedSeat
-)
+// Fetch booked seats from backend
+const fetchSeats = () => {
 
-if(seatTaken){
-alert("Seat already booked")
+fetch(API_URL)
+.then(res => res.json())
+.then(data => {
+
+const booked = data
+.filter(seat => seat.status === "closed")
+.map(seat => seat.seatNumber)
+
+setBookedSeats(booked)
+
+})
+
+}
+
+
+// Load seats when page opens
+useEffect(()=>{
+
+fetchSeats()
+
+},[])
+
+
+// Booking function
+const bookSeat = async () => {
+
+if(!name || !email){
+alert("Please enter name and email")
 return
 }
 
@@ -37,18 +59,28 @@ alert("Age must be between 1 and 100")
 return
 }
 
-const booking = {
-seat:selectedSeat,
-name,
-email,
-age,
-gender,
-date:new Date().toLocaleDateString()
-}
+try{
 
-tickets.push(booking)
+const names = name.trim().split(" ")
 
-localStorage.setItem("tickets",JSON.stringify(tickets))
+const firstName = names[0]
+const lastName = names.slice(1).join(" ")
+
+await fetch(`${API_URL}/${selectedSeat}`,{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+firstName,
+lastName,
+email
+})
+
+})
 
 alert("Seat booked successfully!")
 
@@ -57,13 +89,23 @@ setName("")
 setEmail("")
 setAge("")
 setGender("")
+
+fetchSeats()
+
+}catch(error){
+
+console.error(error)
+alert("Booking failed")
+
 }
 
+}
+
+
+// Render seat
 const renderSeat = (seat) => {
 
-const isBooked = bookedSeats.some(
-ticket => ticket.seat === seat
-)
+const isBooked = bookedSeats.includes(seat)
 
 return(
 
@@ -75,6 +117,7 @@ ${isBooked ? "sold" : ""}
 ${selectedSeat===seat ? "selected" : ""}`}
 
 disabled={isBooked}
+
 onClick={()=>setSelectedSeat(seat)}
 >
 
@@ -92,6 +135,8 @@ onClick={()=>setSelectedSeat(seat)}
 
 }
 
+
+// Render deck layout
 const renderDeck = (deckSeats) => {
 
 let layout = []
@@ -111,6 +156,7 @@ layout.push(renderSeat(deckSeats[i+2]))
 return layout
 
 }
+
 
 return(
 
