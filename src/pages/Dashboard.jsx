@@ -6,7 +6,7 @@ const [tickets,setTickets] = useState([])
 const [editIndex,setEditIndex] = useState(null)
 const [editData,setEditData] = useState({})
 
-const API_URL = "https://bus-booking-backend-yni2.onrender.com/api/tickets/closed"
+const API_URL = "https://bus-booking-backend-yni2.onrender.com/api/tickets"
 
 
 // Fetch bookings from backend
@@ -17,11 +17,16 @@ try{
 const res = await fetch(API_URL)
 const data = await res.json()
 
-const formatted = data.map(ticket => ({
-name: ticket.firstName + " " + ticket.lastName,
+// show only booked seats
+const formatted = data
+.filter(ticket => ticket.status === "closed")
+.map(ticket => ({
+name: (ticket.firstName + " " + ticket.lastName).trim(),
 email: ticket.email,
 seat: ticket.seatNumber,
-date: new Date(ticket.bookingDate).toLocaleDateString()
+date: ticket.bookingDate
+? new Date(ticket.bookingDate).toLocaleDateString()
+: "-"
 }))
 
 setTickets(formatted)
