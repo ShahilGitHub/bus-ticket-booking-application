@@ -10,11 +10,12 @@ const API_URL = "https://bus-booking-backend-yni2.onrender.com/api/tickets/close
 
 
 // Fetch bookings from backend
-const fetchTickets = () => {
+const fetchTickets = async () => {
 
-fetch(API_URL)
-.then(res => res.json())
-.then(data => {
+try{
+
+const res = await fetch(API_URL)
+const data = await res.json()
 
 const formatted = data.map(ticket => ({
 name: ticket.firstName + " " + ticket.lastName,
@@ -25,12 +26,16 @@ date: new Date(ticket.bookingDate).toLocaleDateString()
 
 setTickets(formatted)
 
-})
+}catch(error){
+
+console.error("Error loading tickets:",error)
+
+}
 
 }
 
 
-// Load tickets
+// Load tickets when page opens
 useEffect(()=>{
 
 fetchTickets()
@@ -40,6 +45,8 @@ fetchTickets()
 
 // Delete only selected seat
 const deleteTicket = async (seatNumber) => {
+
+try{
 
 await fetch(
 `https://bus-booking-backend-yni2.onrender.com/api/tickets/${seatNumber}`,
@@ -59,6 +66,12 @@ email:""
 alert("Booking removed")
 
 fetchTickets()
+
+}catch(error){
+
+console.error("Delete failed:",error)
+
+}
 
 }
 
