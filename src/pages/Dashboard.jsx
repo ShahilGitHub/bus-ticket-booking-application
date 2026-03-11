@@ -6,26 +6,58 @@ const [tickets,setTickets] = useState([])
 const [editIndex,setEditIndex] = useState(null)
 const [editData,setEditData] = useState({})
 
-useEffect(()=>{
+const API_URL = "https://bus-booking-backend-yni2.onrender.com/api/tickets/closed"
 
-const data = JSON.parse(localStorage.getItem("tickets")) || []
 
-setTickets(data)
+// Fetch bookings from backend
+const fetchTickets = () => {
 
-},[])
+fetch(API_URL)
+.then(res => res.json())
+.then(data => {
 
-const deleteTicket = (index) => {
+const formatted = data.map(ticket => ({
+name: ticket.firstName + " " + ticket.lastName,
+email: ticket.email,
+age: "-",
+gender: "-",
+seat: ticket.seatNumber,
+date: new Date(ticket.bookingDate).toLocaleDateString()
+}))
 
-let updated = [...tickets]
+setTickets(formatted)
 
-updated.splice(index,1)
-
-localStorage.setItem("tickets",JSON.stringify(updated))
-
-setTickets(updated)
+})
 
 }
 
+
+// Load tickets
+useEffect(()=>{
+
+fetchTickets()
+
+},[])
+
+
+// Delete booking (reset all seats and refresh)
+const deleteTicket = async () => {
+
+await fetch(
+"https://bus-booking-backend-yni2.onrender.com/api/tickets/admin/reset",
+{
+method:"POST"
+}
+)
+
+alert("All bookings cleared")
+
+fetchTickets()
+
+}
+
+
+// Open edit modal
 const openEditModal = (index) => {
 
 setEditIndex(index)
@@ -33,25 +65,28 @@ setEditData(tickets[index])
 
 }
 
+
+// Close modal
 const closeModal = () => {
 
 setEditIndex(null)
 
 }
 
+
+// Save edit locally (UI only)
 const saveEdit = () => {
 
 let updated = [...tickets]
 
 updated[editIndex] = editData
 
-localStorage.setItem("tickets",JSON.stringify(updated))
-
 setTickets(updated)
 
 setEditIndex(null)
 
 }
+
 
 return(
 
@@ -111,7 +146,7 @@ Edit
 
 <button
 className="delete-btn"
-onClick={()=>deleteTicket(index)}
+onClick={deleteTicket}
 >
 Delete
 </button>
